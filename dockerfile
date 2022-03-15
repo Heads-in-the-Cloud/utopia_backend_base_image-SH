@@ -8,23 +8,24 @@
 # syntax=docker/dockerfile:1
 FROM python:3.9.9-slim
 
-MAINTAINER Sean Horner "sean.horner@smoothstack.com"
+LABEL maintainer="sean.horner@smoothstack.com"
 LABEL project="utopia_airlines"
 
 RUN useradd utopian
 
 WORKDIR /home/utopian
 
+# setting up the virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
 # Copying in and applying the project requirements.
-COPY ["requirements.txt", "requirements.txt"]
-RUN python -m pip install --upgrade pip
+COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Uvicorn is installed in its own, non-version-specific command to ensure the most up-to-date version since webserver
-# security is always enhancing and adapting to threats. Also, Uvicorn is highly unlikely to ever introduce
-# code-breaking changes since it will always adhere to the WSGI/ASGI standards.
-RUN pip install uvicorn
+# Installing mysql helper programs
 RUN apt-get update
 RUN apt-get -y install default-libmysqlclient-dev
 RUN apt-get -y install build-essential
-RUN pip install mysqlclient
